@@ -44,6 +44,7 @@ class Block {
             // Recalculate the hash of the Block
             self.hash = null;
             let blockHash = SHA256(JSON.stringify(self));
+            self.hash = currentHash;
 
             // Comparing if the hashes changed
             if (currentHash == blockHash) {

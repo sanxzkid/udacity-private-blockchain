@@ -64,25 +64,29 @@ class Blockchain {
     _addBlock(block) {
         let self = this;
         return new Promise(async (resolve, reject) => {
-            // block height
-            block.height = self.chain.length;
+            this.validateChain().then(errors => {
+                if(errors.length > 0) return reject(errors);
 
-            // UTC timestamp
-            block.time = new Date().getTime().toString().slice(0,-3);
+                // block height
+                block.height = self.chain.length;
 
-            // previous block hash
-            if (block.height > 0) {
-                block.previousBlockHash = this.chain[block.height-1].hash;
-            }    
+                // UTC timestamp
+                block.time = new Date().getTime().toString().slice(0,-3);
 
-            // SHA256 requires a string of data
-            block.hash = SHA256(JSON.stringify(block)).toString();
+                // previous block hash
+                if (block.height > 0) {
+                    block.previousBlockHash = this.chain[block.height-1].hash;
+                }    
 
-            // add block to chain
-            self.chain.push(block);
-            self.height = block.height
-            
-            resolve(block);
+                // SHA256 requires a string of data
+                block.hash = SHA256(JSON.stringify(block)).toString();
+
+                // add block to chain
+                self.chain.push(block);
+                self.height = block.height
+                
+                resolve(block);
+            });
         });
     }
 
@@ -204,17 +208,15 @@ class Blockchain {
                 });
 
                 if(block.height > 0) {
-                    getBlockByHeight(block.height - 1).then(previousBlock => {
+                    self.getBlockByHeight(block.height - 1).then(previousBlock => {
                         if (block.previousBlockHash !== previousBlock.hash) {
                             errorLog.push(`Invalid block sequence: Block #${block.height}, 
                                 hash: ${block.hash}, previous-hash: ${block.previousBlockHash}`);
                         }
                     });
                 }
-
-                resolve(errorLog);
             });
-
+            resolve(errorLog);
         });
     }
 
